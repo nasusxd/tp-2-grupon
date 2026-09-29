@@ -1,0 +1,14 @@
+node_modules/
+.env
+.env.local
+dist/
+build/
+*.log
+.DS_Store
+
+# Strapi
+cms/.tmp/
+cms/.cache/
+cms/build/
+cms/dist/
+cms/exports/
