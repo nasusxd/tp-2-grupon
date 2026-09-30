@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# Corré esto una sola vez, desde la raíz del repo, con la base de datos
-# ya levantada (docker compose up -d). Genera la carpeta cms/ con Strapi
-# ya configurado para usar el mismo Postgres que usa el backend.
+
 
 npx create-strapi-app@latest cms \
   --quickstart \
