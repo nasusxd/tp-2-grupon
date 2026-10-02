@@ -131,8 +131,8 @@ router.get("/profesores/:profesorId/resenas", async (req, res) => {
       total === 0
         ? null
         : Math.round(
-            (resenas.reduce((acc, r) => acc + r.calificacion, 0) / total) * 10
-          ) / 10;
+          (resenas.reduce((acc, r) => acc + r.calificacion, 0) / total) * 10
+        ) / 10;
 
     res.json({
       promedio,
@@ -150,5 +150,25 @@ router.get("/profesores/:profesorId/resenas", async (req, res) => {
     res.status(500).json({ error: "Error interno del servidor" });
   }
 });
+router.get("/profesores", async (_req, res) => {
+  try {
+    const result = await strapi(
+      `/users?filters[tipo_usuario][$eq]=profesor&sort=username:asc`
+    );
 
+    if (!result.ok || !Array.isArray(result.body)) {
+      return res.status(502).json({
+        error: "No se pudieron obtener los profesores",
+        status: result.status,
+      });
+    }
+
+    res.json(
+      result.body.map((p) => ({ id: p.documentId, username: p.username }))
+    );
+  } catch (err) {
+    console.error("Error al listar profesores:", err);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+});
 export default router;

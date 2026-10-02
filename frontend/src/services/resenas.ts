@@ -49,3 +49,19 @@ export async function obtenerResenas(profesorId: string): Promise<ResenasProfeso
 
   return data;
 }
+
+export type Profesor = {
+  id: string;
+  username: string;
+};
+
+export async function listarProfesores(): Promise<Profesor[]> {
+  const res = await fetch(`${BACKEND_URL}/profesores`);
+  const data = await res.json().catch(() => null);
+
+  if (!res.ok) {
+    throw new Error(data?.error || "Error al obtener los profesores");
+  }
+
+  return data;
+}
