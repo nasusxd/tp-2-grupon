@@ -72,6 +72,12 @@
         "alumno",
         "profesor"
       ]
+    },
+    "disponibilidad": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "api::disponibilidad.disponibilidad",
+      "mappedBy": "profesor"
     }
   }
 }
