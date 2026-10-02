@@ -6,7 +6,7 @@ import SignUp from "./pages/AuthPages/SignUp";
 import Calendar from "./pages/Calendar";
 import NotFound from "./pages/OtherPage/NotFound";
 import UserProfiles from "./pages/UserProfiles";
-
+import CrearResena from "./pages/Resenas/CrearResena";
 export default function App() {
   return (
     <>
@@ -16,7 +16,7 @@ export default function App() {
           {/* Layout principal (con sidebar/header) */}
           <Route element={<AppLayout />}>
             <Route index path="/" element={<Calendar />} />
-
+            <Route path="/profesores/:profesorId/resenar" element={<CrearResena />} />
             {/* Perfil: acá va a vivir el listado de reseñas del profesor */}
             <Route path="/profile" element={<UserProfiles />} />
 
