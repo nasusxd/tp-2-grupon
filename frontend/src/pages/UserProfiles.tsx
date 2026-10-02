@@ -4,6 +4,7 @@ import DangerZone from "@/components/UserProfile/DangerZone";
 import Security from "@/components/UserProfile/Security";
 import UserAddressCard from "@/components/UserProfile/UserAddressCard";
 import UserMetaCard from "@/components/UserProfile/UserMetaCard";
+import ListaResenas from "@/components/resenas/ListaResenas";
 
 export default function UserProfiles() {
   return (
@@ -19,6 +20,7 @@ export default function UserProfiles() {
         </h3>
         <div className="space-y-6">
           <UserMetaCard />
+          <ListaResenas />
           <UserAddressCard />
           <Security />
           <DangerZone />
