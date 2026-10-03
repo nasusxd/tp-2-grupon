@@ -32,7 +32,7 @@ export default function CrearResena() {
     setLoading(true);
     try {
       await crearResena({ profesorId, calificacion, comentario });
-      navigate(`/profile?profesor=${profesorId}`);
+      navigate(`/profesores/${profesorId}`);
     } catch (err: any) {
       setError(err.message);
     } finally {

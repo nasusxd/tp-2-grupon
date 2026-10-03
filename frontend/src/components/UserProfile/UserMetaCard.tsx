@@ -1,4 +1,4 @@
-import { getUsuario } from "@/services/sessions";
+import { getUsuario } from "@/services/session";
 
 export default function UserMetaCard() {
   const usuario = getUsuario();

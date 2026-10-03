@@ -44,7 +44,7 @@ export default function Profesores() {
             </span>
             <div className="flex gap-2">
               <Link
-                to={`/profile?profesor=${p.id}`}
+                to={`/profesores/${p.id}`}
                 className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/5"
               >
                 Ver reseñas

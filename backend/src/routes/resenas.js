@@ -8,6 +8,12 @@ const router = Router();
 const STRAPI_URL = process.env.STRAPI_URL;
 const STRAPI_API_TOKEN = process.env.STRAPI_API_TOKEN;
 
+function normalizeStrapiArray(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (payload && Array.isArray(payload.data)) return payload.data;
+  return [];
+}
+
 async function strapi(path, { token = STRAPI_API_TOKEN, ...options } = {}) {
   const res = await fetch(`${STRAPI_URL}/api${path}`, {
     ...options,
@@ -64,7 +70,9 @@ router.post("/resenas", async (req, res) => {
         status: profesor.status,
       });
     }
-    if (!Array.isArray(profesor.body) || profesor.body.length === 0) {
+
+    const profesorData = normalizeStrapiArray(profesor.body);
+    if (profesorData.length === 0) {
       return res.status(404).json({ error: "Profesor no encontrado" });
     }
 
@@ -156,15 +164,16 @@ router.get("/profesores", async (_req, res) => {
       `/users?filters[tipo_usuario][$eq]=profesor&sort=username:asc`
     );
 
-    if (!result.ok || !Array.isArray(result.body)) {
+    if (!result.ok) {
       return res.status(502).json({
         error: "No se pudieron obtener los profesores",
         status: result.status,
       });
     }
 
+    const profesores = normalizeStrapiArray(result.body);
     res.json(
-      result.body.map((p) => ({ id: p.documentId, username: p.username }))
+      profesores.map((p) => ({ id: p.documentId, username: p.username }))
     );
   } catch (err) {
     console.error("Error al listar profesores:", err);

@@ -1,8 +1,5 @@
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import PageMeta from "@/components/common/PageMeta";
-import DangerZone from "@/components/UserProfile/DangerZone";
-import Security from "@/components/UserProfile/Security";
-import UserAddressCard from "@/components/UserProfile/UserAddressCard";
 import UserMetaCard from "@/components/UserProfile/UserMetaCard";
 import ListaResenas from "@/components/resenas/ListaResenas";
 
@@ -21,9 +18,6 @@ export default function UserProfiles() {
         <div className="space-y-6">
           <UserMetaCard />
           <ListaResenas />
-          <UserAddressCard />
-          <Security />
-          <DangerZone />
         </div>
       </div>
     </>
