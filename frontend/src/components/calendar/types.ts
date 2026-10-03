@@ -3,6 +3,7 @@ import type { EventInput } from "@fullcalendar/react";
 export type CalendarEventLevel = "Danger" | "Success" | "Primary" | "Warning";
 
 export interface CalendarEvent extends EventInput {
+  id: string;
   extendedProps: {
     calendar: string;
   };
@@ -33,4 +34,3 @@ export const CALENDAR_VIEW_OPTIONS: CalendarViewOption[] = [
   { key: "timeGridWeek", label: "Week" },
   { key: "timeGridDay", label: "Day" },
 ];
-

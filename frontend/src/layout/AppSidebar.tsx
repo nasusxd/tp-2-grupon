@@ -53,6 +53,11 @@ const navItems: NavItem[] = [
     name: "Profesores",
     path: "/profesores",
   },
+  {
+    icon: <ListIcon fontSize={24} />,
+    name: "Turnos",
+    path: "/turnos",
+  },
 ];
 
 const AppSidebar: React.FC = () => {

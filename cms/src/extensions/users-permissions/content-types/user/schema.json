@@ -75,7 +75,7 @@
     },
     "disponibilidad": {
       "type": "relation",
-      "relation": "oneToOne",
+      "relation": "oneToMany",
       "target": "api::disponibilidad.disponibilidad",
       "mappedBy": "profesor"
     }

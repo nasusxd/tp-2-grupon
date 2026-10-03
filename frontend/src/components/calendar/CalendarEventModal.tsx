@@ -8,7 +8,9 @@ export interface CalendarEventModalProps {
   selectedEvent: CalendarEvent | null;
   initialStartDate?: string;
   initialEndDate?: string;
+  error?: string | null;
   onSave: (data: EventFormData) => void;
+  onDelete: (documentId: string) => void;
 }
 
 const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
@@ -16,7 +18,9 @@ const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
   onClose,
   selectedEvent,
   initialStartDate = "",
+  error,
   onSave,
+  onDelete,
 }) => {
   const [horaInicio, setHoraInicio] = useState("08:00");
   const [horaFin, setHoraFin] = useState("09:00");
@@ -27,8 +31,8 @@ const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
       const tituloStr = typeof selectedEvent.title === "string" ? selectedEvent.title : "";
       const deconstruirTitulo = tituloStr.replace("Disponible: ", "").split(" a ");
       
-      setHoraInicio(deconstruirTitulo[0] || "08:00");
-      setHoraFin(deconstruirTitulo[1] || "09:00");
+      setHoraInicio(deconstruirTitulo[0]?.slice(0, 5) || "08:00");
+      setHoraFin(deconstruirTitulo[1]?.slice(0, 5) || "09:00");
 
       if (selectedEvent.start instanceof Date) {
         setFecha(selectedEvent.start.toISOString().split("T")[0]);
@@ -76,6 +80,11 @@ const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
         </div>
 
         <div className="space-y-5">
+          {error && (
+            <p className="text-sm text-error-500" role="alert">
+              {error}
+            </p>
+          )}
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-400">
               Fecha Seleccionada
@@ -122,6 +131,19 @@ const CalendarEventModal: React.FC<CalendarEventModalProps> = ({
 
         {/* Botonera inferior */}
         <div className="modal-footer mt-4 flex items-center gap-3 sm:justify-end">
+          {selectedEvent && (
+            <button
+              onClick={() => {
+                if (window.confirm("¿Querés eliminar esta disponibilidad?")) {
+                  onDelete(selectedEvent.id);
+                }
+              }}
+              type="button"
+              className="flex w-full justify-center rounded-lg border border-error-500 px-4 py-2.5 text-sm font-medium text-error-500 hover:bg-error-50 sm:me-auto sm:w-auto dark:hover:bg-error-500/10"
+            >
+              Eliminar
+            </button>
+          )}
           <button
             onClick={onClose}
             type="button"

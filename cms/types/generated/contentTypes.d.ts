@@ -468,7 +468,7 @@ export interface ApiDisponibilidadDisponibilidad
     > &
       Schema.Attribute.Private;
     profesor: Schema.Attribute.Relation<
-      'oneToOne',
+      'manyToOne',
       'plugin::users-permissions.user'
     >;
     publishedAt: Schema.Attribute.DateTime;
@@ -988,7 +988,7 @@ export interface PluginUsersPermissionsUser
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     disponibilidad: Schema.Attribute.Relation<
-      'oneToOne',
+      'oneToMany',
       'api::disponibilidad.disponibilidad'
     >;
     email: Schema.Attribute.Email &
