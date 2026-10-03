@@ -6,6 +6,8 @@ import SignUp from "./pages/AuthPages/SignUp";
 import Calendar from "./pages/Calendar";
 import NotFound from "./pages/OtherPage/NotFound";
 import UserProfiles from "./pages/UserProfiles";
+import TurnosAlumno from "./pages/TurnosAlumno";
+
 import CrearResena from "./pages/Resenas/CrearResena";
 import Profesores from "./pages/Resenas/Profesores";
 export default function App() {
@@ -23,6 +25,7 @@ export default function App() {
             <Route path="/profesores" element={<Profesores />} />
             {/* Disponibilidad: calendario para gestionar/ver horarios */}
             <Route path="/calendar" element={<Calendar />} />
+            <Route path="/turnos" element={<TurnosAlumno />} />
           </Route>
 
           {/* Login y registro */}

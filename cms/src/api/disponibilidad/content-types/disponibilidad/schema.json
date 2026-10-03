@@ -1,0 +1,30 @@
+{
+  "kind": "collectionType",
+  "collectionName": "disponibilidades",
+  "info": {
+    "singularName": "disponibilidad",
+    "pluralName": "disponibilidades",
+    "displayName": "Disponibilidad "
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "profesor": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user",
+      "inversedBy": "disponibilidad"
+    },
+    "fecha": {
+      "type": "date"
+    },
+    "hora_fin": {
+      "type": "time"
+    },
+    "hora_inicio": {
+      "type": "time"
+    }
+  }
+}

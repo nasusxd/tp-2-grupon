@@ -1,6 +1,8 @@
 import { useLanguage } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useModal } from "@/hooks/useModal";
+import { guardarDisponibilidad } from "@/services/disponibilidad";
+
 import type {
   CalendarRef,
   DateSelectInfo,
@@ -60,7 +62,31 @@ const Calendar: React.FC = () => {
   const isRtlLayout = dir === "rtl";
   const { theme } = useTheme();
 
-  const [events, setEvents] = useState<CalendarEvent[]>(INITIAL_EVENTS);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+
+  // 2. Agregamos este useEffect para traer los horarios reales de Postgres
+  useEffect(() => {
+    const obtenerHorarios = async () => {
+      try {
+        const res = await fetch("http://localhost:4000/api/disponibilidades?profesorId=1");
+        const data = await res.json();
+
+        if (res.ok && data.horariosDisponibles) {
+          const horariosFormateados = data.horariosDisponibles.map((dispo: any) => ({
+            id: String(dispo.id),
+            title: `Disponible: ${dispo.hora_inicio} a ${dispo.hora_fin}`,
+            start: dispo.fecha,
+            extendedProps: { calendar: "Success" }
+          }));
+          setEvents(horariosFormateados);
+        }
+      } catch (error) {
+        console.error("Error al conectar con el backend:", error);
+      }
+    };
+    obtenerHorarios();
+  }, []);
+
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
     null,
   );
@@ -129,39 +155,32 @@ const Calendar: React.FC = () => {
     openModal();
   };
 
-  const handleSaveEvent = (formData: EventFormData) => {
-    const titleVal =
-      formData.title.trim() || (selectedEvent ? "Event" : "New Event");
-    const startDateVal = formData.start;
-    const endDateVal = formData.end || startDateVal;
-    const levelVal = formData.level || "Primary";
+   const handleSaveEvent = async (formData: EventFormData) => {
+    try {
+      const datosNuevaDisponibilidad = {
+        profesorId: 1,
+        fecha: selectedStartDate,
+        hora_inicio: formData.title,
+        hora_fin: formData.end || formData.title, 
+      };
 
-    if (selectedEvent) {
-      setEvents((prevEvents) =>
-        prevEvents.map((ev) =>
-          String(ev.id) === String(selectedEvent.id)
-            ? {
-                ...ev,
-                title: titleVal,
-                start: startDateVal,
-                end: endDateVal || startDateVal,
-                extendedProps: { calendar: levelVal },
-              }
-            : ev,
-        ),
-      );
-    } else {
+      await guardarDisponibilidad(datosNuevaDisponibilidad);
+      
       const newEvent: CalendarEvent = {
         id: Date.now().toString(),
-        title: titleVal,
-        start: startDateVal,
-        end: endDateVal || startDateVal,
+        title: `Disponible: ${formData.title} a ${formData.end}`, 
+        start: selectedStartDate,
         allDay: true,
-        extendedProps: { calendar: levelVal },
+        extendedProps: { calendar: "Success" }, 
       };
+
       setEvents((prevEvents) => [...prevEvents, newEvent]);
+      alert("¡Disponibilidad guardada correctamente!");
+      closeModal();
+    } catch (error) {
+      console.error(error);
+      alert("Hubo un problemita al guardar la disponibilidad en el servidor.");
     }
-    closeModal();
   };
 
   useEffect(() => {
@@ -251,7 +270,6 @@ const Calendar: React.FC = () => {
                 "rounded-lg! border-0! bg-brand-500! px-3! sm:px-4! py-2! sm:py-2.5! text-xs! sm:text-sm! font-medium! text-white hover:bg-brand-600! focus:shadow-none! w-auto!",
             },
           }}
-          // View configurations
           views={{
             multiMonthYear: {
               multiMonthMaxColumns: 3,
@@ -463,7 +481,7 @@ const Calendar: React.FC = () => {
                 "border-0! bg-gray-50! text-xs! font-medium! text-gray-500! dark:border-0! dark:bg-gray-900! dark:text-gray-400!",
             },
           }}
-          // Body configuration
+
           height="auto"
           borderless={true}
           viewClass="border-t! border-b-0! border-x-0! border-gray-200! bg-transparent! dark:border-gray-800! dark:bg-transparent!"

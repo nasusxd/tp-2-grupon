@@ -443,6 +443,28 @@ export interface AdminUser extends Struct.CollectionTypeSchema {
   };
 }
 
+export interface ApiDisponibilidadDisponibilidad
+  extends Struct.CollectionTypeSchema {
+  collectionName: 'disponibilidades';
+  info: {
+    displayName: 'Disponibilidad ';
+    pluralName: 'disponibilidades';
+    singularName: 'disponibilidad';
+  };
+  options: {
+    draftAndPublish: true;
+  };
+  attributes: {
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    fecha: Schema.Attribute.Date;
+    hora_fin: Schema.Attribute.Time;
+    hora_inicio: Schema.Attribute.Time;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::disponibilidad.disponibilidad'
 export interface ApiResenaResena extends Struct.CollectionTypeSchema {
   collectionName: 'resenas';
   info: {
@@ -952,6 +974,10 @@ export interface PluginUsersPermissionsUser
     createdAt: Schema.Attribute.DateTime;
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
+    disponibilidad: Schema.Attribute.Relation<
+      'oneToOne',
+      'api::disponibilidad.disponibilidad'
+    >;
     email: Schema.Attribute.Email &
       Schema.Attribute.Required &
       Schema.Attribute.SetMinMaxLength<{
@@ -999,6 +1025,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token': AdminTransferToken;
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
+      'api::disponibilidad.disponibilidad': ApiDisponibilidadDisponibilidad;
       'api::resena.resena': ApiResenaResena;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
