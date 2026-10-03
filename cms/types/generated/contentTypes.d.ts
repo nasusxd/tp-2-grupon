@@ -465,6 +465,38 @@ export interface ApiDisponibilidadDisponibilidad
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::disponibilidad.disponibilidad'
+export interface ApiResenaResena extends Struct.CollectionTypeSchema {
+  collectionName: 'resenas';
+  info: {
+    displayName: 'rese\u00F1a';
+    pluralName: 'resenas';
+    singularName: 'resena';
+  };
+  options: {
+    draftAndPublish: false;
+  };
+  attributes: {
+    alumno: Schema.Attribute.Relation<
+      'oneToOne',
+      'plugin::users-permissions.user'
+    >;
+    calificacion: Schema.Attribute.Integer &
+      Schema.Attribute.Required &
+      Schema.Attribute.SetMinMax<
+        {
+          max: 5;
+          min: 1;
+        },
+        number
+      >;
+    comentario: Schema.Attribute.Text & Schema.Attribute.Required;
+    createdAt: Schema.Attribute.DateTime;
+    createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+    locale: Schema.Attribute.String & Schema.Attribute.Private;
+    localizations: Schema.Attribute.Relation<
+      'oneToMany',
+      'api::resena.resena'
     > &
       Schema.Attribute.Private;
     profesor: Schema.Attribute.Relation<
@@ -994,6 +1026,7 @@ declare module '@strapi/strapi' {
       'admin::transfer-token-permission': AdminTransferTokenPermission;
       'admin::user': AdminUser;
       'api::disponibilidad.disponibilidad': ApiDisponibilidadDisponibilidad;
+      'api::resena.resena': ApiResenaResena;
       'plugin::content-releases.release': PluginContentReleasesRelease;
       'plugin::content-releases.release-action': PluginContentReleasesReleaseAction;
       'plugin::i18n.locale': PluginI18NLocale;

@@ -1,0 +1,35 @@
+{
+  "kind": "collectionType",
+  "collectionName": "resenas",
+  "info": {
+    "singularName": "resena",
+    "pluralName": "resenas",
+    "displayName": "reseña"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "calificacion": {
+      "type": "integer",
+      "required": true,
+      "min": 1,
+      "max": 5
+    },
+    "comentario": {
+      "type": "text",
+      "required": true
+    },
+    "alumno": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    },
+    "profesor": {
+      "type": "relation",
+      "relation": "oneToOne",
+      "target": "plugin::users-permissions.user"
+    }
+  }
+}
