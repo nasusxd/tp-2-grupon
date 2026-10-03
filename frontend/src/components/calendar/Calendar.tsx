@@ -1,7 +1,15 @@
 import { useLanguage } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
 import { useModal } from "@/hooks/useModal";
-import { guardarDisponibilidad } from "@/services/disponibilidad";
+import {
+  actualizarDisponibilidad,
+  crearDisponibilidad,
+  eliminarDisponibilidadProfesor,
+  listarDisponibilidadesProfesor,
+  type DatosDisponibilidad,
+  type DisponibilidadHorario,
+} from "@/services/disponibilidad";
+import { getUsuario } from "@/services/session";
 
 import type {
   CalendarRef,
@@ -24,6 +32,7 @@ import "@fullcalendar/react/themes/classic/palette.css";
 import "@fullcalendar/react/themes/classic/theme.css";
 import timeGridPlugin from "@fullcalendar/react/timegrid";
 import React, { useEffect, useRef, useState } from "react";
+import CalendarAlumno from "./CalendarAlumno";
 import CalendarEventItem from "./CalendarEventItem";
 import CalendarEventModal from "./CalendarEventModal";
 import CalendarViewSelect from "./CalendarViewSelect";
@@ -35,57 +44,69 @@ import {
 } from "./icons";
 import type { CalendarEvent, EventFormData } from "./types";
 
-const INITIAL_EVENTS: CalendarEvent[] = [
-  {
-    id: "1",
-    title: "Event Conf.",
-    start: new Date().toISOString().split("T")[0],
-    extendedProps: { calendar: "Danger" },
-  },
-  {
-    id: "2",
-    title: "Meeting",
-    start: new Date(Date.now() + 86400000).toISOString().split("T")[0],
+function convertirADisponibilidad(disponibilidad: DisponibilidadHorario): CalendarEvent {
+  return {
+    id: disponibilidad.documentId,
+    title: `Disponible: ${disponibilidad.hora_inicio.slice(0, 5)} a ${disponibilidad.hora_fin.slice(0, 5)}`,
+    start: disponibilidad.fecha,
+    allDay: true,
     extendedProps: { calendar: "Success" },
-  },
-  {
-    id: "3",
-    title: "Workshop",
-    start: new Date(Date.now() + 172800000).toISOString().split("T")[0],
-    end: new Date(Date.now() + 259200000).toISOString().split("T")[0],
-    extendedProps: { calendar: "Primary" },
-  },
-];
+  };
+}
+
+function obtenerFechaEvento(evento: CalendarEvent) {
+  if (typeof evento.start === "string") return evento.start.split("T")[0];
+  if (evento.start instanceof Date) {
+    const year = evento.start.getFullYear();
+    const month = String(evento.start.getMonth() + 1).padStart(2, "0");
+    const day = String(evento.start.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+  return "";
+}
+
+function obtenerHorasEvento(evento: CalendarEvent) {
+  const titulo = typeof evento.title === "string" ? evento.title : "";
+  const [inicio, fin] = titulo.replace("Disponible: ", "").split(" a ");
+  return { inicio, fin };
+}
 
 const Calendar: React.FC = () => {
+  const usuario = getUsuario();
   const { language: locale, dir } = useLanguage();
   const isRtlLayout = dir === "rtl";
   const { theme } = useTheme();
 
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [availabilityError, setAvailabilityError] = useState<string | null>(null);
 
-  // 2. Agregamos este useEffect para traer los horarios reales de Postgres
   useEffect(() => {
-    const obtenerHorarios = async () => {
-      try {
-        const res = await fetch("http://localhost:4000/api/disponibilidades?profesorId=1");
-        const data = await res.json();
+    if (usuario?.tipo_usuario !== "profesor" || !usuario.documentId) {
+      setLoading(false);
+      return;
+    }
 
-        if (res.ok && data.horariosDisponibles) {
-          const horariosFormateados = data.horariosDisponibles.map((dispo: any) => ({
-            id: String(dispo.id),
-            title: `Disponible: ${dispo.hora_inicio} a ${dispo.hora_fin}`,
-            start: dispo.fecha,
-            extendedProps: { calendar: "Success" }
-          }));
-          setEvents(horariosFormateados);
+    let cancelado = false;
+    setLoading(true);
+    setAvailabilityError(null);
+    listarDisponibilidadesProfesor(usuario.documentId)
+      .then((disponibilidades) => {
+        if (!cancelado) {
+          setEvents(disponibilidades.map(convertirADisponibilidad));
         }
-      } catch (error) {
-        console.error("Error al conectar con el backend:", error);
-      }
+      })
+      .catch((error: Error) => {
+        if (!cancelado) setAvailabilityError(error.message);
+      })
+      .finally(() => {
+        if (!cancelado) setLoading(false);
+      });
+
+    return () => {
+      cancelado = true;
     };
-    obtenerHorarios();
-  }, []);
+  }, [usuario?.documentId, usuario?.tipo_usuario]);
 
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(
     null,
@@ -106,6 +127,7 @@ const Calendar: React.FC = () => {
   };
 
   const handleOpenAddModal = () => {
+    setAvailabilityError(null);
     const currentDate = new Date();
     const yyyy = currentDate.getFullYear();
     const mm = String(currentDate.getMonth() + 1).padStart(2, "0");
@@ -119,6 +141,7 @@ const Calendar: React.FC = () => {
   };
 
   const handleDateSelect = (selectInfo: DateSelectInfo) => {
+    setAvailabilityError(null);
     const startStr = selectInfo.startStr
       ? selectInfo.startStr.split("T")[0]
       : "";
@@ -133,6 +156,7 @@ const Calendar: React.FC = () => {
   };
 
   const handleEventClick = (clickInfo: EventClickInfo) => {
+    setAvailabilityError(null);
     const event = clickInfo.event;
     if (event.url) {
       window.open(event.url);
@@ -155,31 +179,72 @@ const Calendar: React.FC = () => {
     openModal();
   };
 
-   const handleSaveEvent = async (formData: EventFormData) => {
+  const handleSaveEvent = async (formData: EventFormData) => {
+    if (!usuario?.documentId) {
+      setAvailabilityError("No se pudo identificar al profesor.");
+      return;
+    }
+
+    const datos: DatosDisponibilidad = {
+      fecha: selectedStartDate,
+      hora_inicio: formData.title,
+      hora_fin: formData.end,
+    };
+    const duplicada = events.some((evento) => {
+      if (selectedEvent?.id === evento.id) return false;
+      const horas = obtenerHorasEvento(evento);
+      return (
+        obtenerFechaEvento(evento) === datos.fecha &&
+        horas.inicio === datos.hora_inicio &&
+        horas.fin === datos.hora_fin
+      );
+    });
+    if (duplicada) {
+      setAvailabilityError("Ya existe una disponibilidad con ese horario.");
+      return;
+    }
+
     try {
-      const datosNuevaDisponibilidad = {
-        profesorId: 1,
-        fecha: selectedStartDate,
-        hora_inicio: formData.title,
-        hora_fin: formData.end || formData.title, 
-      };
+      const result = selectedEvent
+        ? await actualizarDisponibilidad(selectedEvent.id, datos)
+        : await crearDisponibilidad(datos);
+      if (!result.data) {
+        throw new Error("Strapi no devolvió la disponibilidad guardada");
+      }
 
-      await guardarDisponibilidad(datosNuevaDisponibilidad);
-      
-      const newEvent: CalendarEvent = {
-        id: Date.now().toString(),
-        title: `Disponible: ${formData.title} a ${formData.end}`, 
-        start: selectedStartDate,
-        allDay: true,
-        extendedProps: { calendar: "Success" }, 
-      };
-
-      setEvents((prevEvents) => [...prevEvents, newEvent]);
-      alert("¡Disponibilidad guardada correctamente!");
+      const eventoGuardado = convertirADisponibilidad(result.data);
+      setEvents((prevEvents) =>
+        selectedEvent
+          ? prevEvents.map((event) =>
+              event.id === selectedEvent.id ? eventoGuardado : event,
+            )
+          : [...prevEvents, eventoGuardado],
+      );
+      setAvailabilityError(null);
       closeModal();
     } catch (error) {
-      console.error(error);
-      alert("Hubo un problemita al guardar la disponibilidad en el servidor.");
+      setAvailabilityError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo guardar la disponibilidad",
+      );
+    }
+  };
+
+  const handleDeleteEvent = async (documentId: string) => {
+    try {
+      await eliminarDisponibilidadProfesor(documentId);
+      setEvents((prevEvents) =>
+        prevEvents.filter((event) => event.id !== documentId),
+      );
+      setAvailabilityError(null);
+      closeModal();
+    } catch (error) {
+      setAvailabilityError(
+        error instanceof Error
+          ? error.message
+          : "No se pudo eliminar la disponibilidad",
+      );
     }
   };
 
@@ -204,11 +269,33 @@ const Calendar: React.FC = () => {
     };
   }, [isRtlLayout]);
 
+  if (usuario?.tipo_usuario === "alumno") {
+    return <CalendarAlumno />;
+  }
+
+  if (usuario?.tipo_usuario !== "profesor" || !usuario.documentId) {
+    return (
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 text-sm text-gray-600 dark:border-gray-800 dark:bg-white/3 dark:text-gray-300">
+        La gestión de disponibilidades está disponible únicamente para profesores.
+      </div>
+    );
+  }
+
   return (
     <div
       className="overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/3"
       data-color-scheme={theme}
     >
+      {availabilityError && (
+        <p className="p-4 text-sm text-error-500" role="alert">
+          {availabilityError}
+        </p>
+      )}
+      {loading && (
+        <p className="p-4 text-sm text-gray-500 dark:text-gray-400">
+          Cargando tus disponibilidades...
+        </p>
+      )}
       <div
         className={`custom-calendar relative ${currentView === "multiMonthYear" ? "fc-multimonth" : ""}`}
         data-color-scheme={theme}
@@ -535,7 +622,9 @@ const Calendar: React.FC = () => {
         selectedEvent={selectedEvent}
         initialStartDate={selectedStartDate}
         initialEndDate={selectedEndDate}
+        error={availabilityError}
         onSave={handleSaveEvent}
+        onDelete={handleDeleteEvent}
       />
     </div>
   );

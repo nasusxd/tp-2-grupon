@@ -465,6 +465,19 @@ export interface ApiDisponibilidadDisponibilidad
     localizations: Schema.Attribute.Relation<
       'oneToMany',
       'api::disponibilidad.disponibilidad'
+    > &
+      Schema.Attribute.Private;
+    profesor: Schema.Attribute.Relation<
+      'manyToOne',
+      'plugin::users-permissions.user'
+    >;
+    publishedAt: Schema.Attribute.DateTime;
+    updatedAt: Schema.Attribute.DateTime;
+    updatedBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
+      Schema.Attribute.Private;
+  };
+}
+
 export interface ApiResenaResena extends Struct.CollectionTypeSchema {
   collectionName: 'resenas';
   info: {
@@ -975,7 +988,7 @@ export interface PluginUsersPermissionsUser
     createdBy: Schema.Attribute.Relation<'oneToOne', 'admin::user'> &
       Schema.Attribute.Private;
     disponibilidad: Schema.Attribute.Relation<
-      'oneToOne',
+      'oneToMany',
       'api::disponibilidad.disponibilidad'
     >;
     email: Schema.Attribute.Email &

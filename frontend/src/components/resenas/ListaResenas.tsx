@@ -36,9 +36,14 @@ function obtenerProfesorId(parametro: string | null): string | null {
   return null;
 }
 
-export default function ListaResenas() {
+export default function ListaResenas({
+  profesorId: profesorIdProp,
+}: {
+  profesorId?: string;
+}) {
   const [searchParams] = useSearchParams();
-  const profesorId = obtenerProfesorId(searchParams.get("profesor"));
+  const profesorId =
+    profesorIdProp ?? obtenerProfesorId(searchParams.get("profesor"));
 
   const [datos, setDatos] = useState<ResenasProfesor | null>(null);
   const [error, setError] = useState<string | null>(null);
